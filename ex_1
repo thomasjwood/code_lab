@@ -1,0 +1,99 @@
+library(tidyverse)
+library(magrittr)
+
+
+d2 <- "https://github.com/thomasjwood/code_lab/raw/main/data/billboard_200_68-23.rds" %>% 
+  url %>% 
+  gzcon %>% 
+  readRDS
+
+
+d2 %>% 
+  filter(
+    performer %>% 
+      equals("Taylor Swift")
+  ) %>% 
+  group_by(
+    chart_week
+  ) %>% 
+  tally %>% 
+  arrange(desc(chart_week)) %>% 
+  group_by(n) %>% 
+  tally
+
+
+d2 %>% 
+  filter(
+    current_week %>% 
+      is_weakly_less_than(10) &
+    performer %>% 
+      str_detect("Soundtrack|Various Artists") %>% 
+      not
+    ) %>% 
+  group_by(
+    decade, performer
+  ) %>% 
+  tally %>% 
+  arrange(decade, desc(n)) %>% 
+  slice(1:5) %>% 
+  print(n = 30)
+
+d2 %>% 
+  filter(
+    current_week %>% 
+      is_weakly_less_than(10) &
+    performer %>% 
+      str_detect("Soundtrack|Various Artists") %>% 
+      not
+    ) %>% 
+  group_by(
+    decade, performer, title
+  ) %>% 
+  tally %>% 
+  tally %>% 
+  arrange(decade, desc(n)) %>% 
+  slice(1:5) %>% 
+  print(n = 30)
+  
+
+
+
+t3 <- d2 %>% 
+  filter(
+    current_week %>% 
+      is_weakly_less_than(100)
+    ) %>% 
+  group_by(
+    decade, title, performer
+    ) %>% 
+  tally %>% 
+  arrange(decade, desc(n)) %>% 
+  group_by(decade) %>% 
+  slice(1:5)  
+
+t3 %>% 
+  left_join(
+    d2 %>% 
+      select(
+        chart_week, title, performer
+        ) %>% 
+      group_by(
+        title, performer
+      ) %>% 
+      arrange(desc(chart_week)) %>% 
+      slice(n()) %>% 
+      rename(first_week = chart_week)
+    ) %>% 
+  left_join(
+    d2 %>% 
+      select(
+        chart_week, title, performer
+      ) %>% 
+      group_by(
+        title, performer
+      ) %>% 
+      arrange(chart_week) %>% 
+      slice(n()) %>% 
+      rename(last_week = chart_week)
+    )
+
